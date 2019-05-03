@@ -1,0 +1,65 @@
+version: '3'
+
+# This docker-compose is for developer convenience, not for running in production.
+
+services:
+
+  # For running the python consumers
+  app:
+    build:
+      context: .
+      args:
+        DEVELOPMENT: 1
+    depends_on:
+      - elasticsearch
+      - kafka
+    volumes:
+      - ${PWD}/src:/app/src
+    environment:
+      - DEVELOPMENT=1
+      - PYTHONUNBUFFERED=true
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper:12888:13888
+
+  kafka:
+    image: confluentinc/cp-kafka:5.0.0
+    hostname: kafka
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: -Xmx512m -Xms512m
+
+volumes:
+  esdata1:
+    driver: local
