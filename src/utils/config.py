@@ -14,6 +14,6 @@ def get_config():
         'elasticsearch_port': es_port,
         'elasticsearch_index_prefix': os.environ.get("ELASTICSEARCH_INDEX_PREFIX", "search2"),
         'elasticsearch_data_type': os.environ.get("ELASTICSEARCH_DATA_TYPE", "data"),
-        'elasticsearch_url': f"//{es_host}:{es_port}",
+        'elasticsearch_url': f"http://{es_host}:{es_port}",
         'elasticsearch_save_topic': os.environ.get('KAFKA_ES_UPDATE_TOPIC', 'elasticsearch_updates')
     }
