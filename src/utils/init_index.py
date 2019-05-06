@@ -25,13 +25,12 @@ def init_index(data):
     prefix = config['elasticsearch_index_prefix']
     index_name = f"{prefix}.{data['name']}"
     alias_name = f"{prefix}.{data['alias']}"
-    aliases = indices[index_name].get('aliases', {})
     if index_name not in indices:
         # Neither index nor alias has been created
         print(f"Creating new index '{index_name}' with alias '{alias_name}'.")
         _create_index(index_name, data['props'], config)
         _create_alias(alias_name, index_name, config)
-    elif alias_name not in aliases:
+    elif alias_name not in indices[index_name].get('aliases', {}):
         # Index is created, but let's check for aliases
         print(f"Creating missing alias '{alias_name}'.")
         _create_alias(alias_name, index_name, config)
