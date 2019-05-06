@@ -3,6 +3,7 @@ Convenience wrapper / generator function arounda kafka consumer for a given
 topic/client group.
 """
 import sys
+import traceback
 import json
 from confluent_kafka import Consumer, KafkaError
 
@@ -51,4 +52,5 @@ def kafka_consumer(topics, handlers):
         except Exception as err:
             sys.stderr.write(f"Error handling message '{key}':\n")
             sys.stderr.write(str(err) + '\n')
+            traceback.print_exc()
     consumer.close()
