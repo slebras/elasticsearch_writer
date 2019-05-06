@@ -10,8 +10,8 @@ def get_config():
     return {
         'kafka_server': os.environ.get('KAFKA_SERVER', 'kafka'),
         'kafka_clientgroup': os.environ.get('KAFKA_CLIENTGROUP', 'search_indexer'),
-        'elasticsearch_host': os.environ.get("ELASTICSEARCH_HOST", 'elasticsearch'),
-        'elasticsearch_port': os.environ.get("ELASTICSEARCH_PORT", 9200),
+        'elasticsearch_host': es_host,
+        'elasticsearch_port': es_port,
         'elasticsearch_index_prefix': os.environ.get("ELASTICSEARCH_INDEX_PREFIX", "search2"),
         'elasticsearch_data_type': os.environ.get("ELASTICSEARCH_DATA_TYPE", "data"),
         'elasticsearch_url': f"//{es_host}:{es_port}",

@@ -7,7 +7,8 @@ ARG VCS_REF
 ARG BRANCH=develop
 
 # Copy required files
-COPY ./requirements.txt ./dev-requirements.txt ./src/ ./tox.ini /app/
+COPY ./requirements.txt ./dev-requirements.txt ./tox.ini /app/
+COPY src /app/src
 
 # Install pip requirements
 RUN pip install --upgrade pip && \
