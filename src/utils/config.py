@@ -5,7 +5,7 @@ def get_config():
     """
     Initialize configuration data.
     """
-    return {
+    config = {
         'kafka_server': os.environ.get('KAFKA_SERVER', 'kafka'),
         'kafka_clientgroup': os.environ.get('KAFKA_CLIENTGROUP', 'search_indexer'),
         'elasticsearch_host': os.environ.get("ELASTICSEARCH_HOST", 'elasticsearch'),
@@ -14,3 +14,5 @@ def get_config():
         'elasticsearch_data_type': os.environ.get("ELASTICSEARCH_DATA_TYPE", "data"),
         'elasticsearch_save_topic': os.environ.get('KAFKA_ES_UPDATE_TOPIC', 'elasticsearch_updates')
     }
+    config['elasticsearch_url'] = f"http://{config['elasticsearch_host']}:{config['elasticsearch_port']}"
+    return config

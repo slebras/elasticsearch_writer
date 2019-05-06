@@ -20,6 +20,7 @@ class TestIntegration(unittest.TestCase):
                 'id': '123',
                 'index': 'myindex'
             }),
+            'index',
             callback=delivery_report
         )
         producer.poll(60)

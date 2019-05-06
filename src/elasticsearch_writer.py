@@ -9,9 +9,9 @@ from .utils.config import get_config
 
 
 def main(queue):
-    batch_writes = []
+    batch_writes = []  # type: list
     while True:
-        while queue.qsize():
+        while queue.qsize() and len(batch_writes) < 1000:
             batch_writes.append(queue.get())
         if batch_writes:
             _save_to_elastic(batch_writes)

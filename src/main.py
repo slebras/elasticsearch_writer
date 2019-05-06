@@ -8,12 +8,10 @@ import queue
 from . import elasticsearch_consumer
 from . import elasticsearch_writer
 from .utils.threadify import threadify
-from .utils.set_up_indexes import set_up_indexes
 
 if __name__ == '__main__':
-    # Create the indexes for elasticsearch
-    set_up_indexes()
     print('Starting threads...')
+    # We keep a thread queue for communication between the kafka consumer and the ES bulk updater
     update_queue = queue.Queue()  # type: queue.Queue
     consumer_thread = threadify(elasticsearch_consumer.main, [update_queue])
     writer_thread = threadify(elasticsearch_writer.main, [update_queue])
