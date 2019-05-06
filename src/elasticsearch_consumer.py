@@ -1,7 +1,6 @@
 """
 Consume elasticsearch save events from kafka.
 """
-import sys
 import jsonschema
 
 from .utils.kafka_consumer import kafka_consumer
@@ -38,16 +37,12 @@ def _handle_index(queue):
     return handler
 
 
-def _handle_init_index(msg_data, queue):
+def _handle_init_index(msg_data):
     """Handle an event to initialize a new index with a type mapping."""
     print(f"Initializing index '{msg_data['name']}'")
     # Initialize a new index with a type mapping
     jsonschema.validate(instance=msg_data, schema=_INIT_INDEX_SCHEMA)
-    try:
-        init_index(msg_data)
-    except Exception as err:
-        sys.stderr.write("Error initializing index:")
-        sys.stderr.write(str(err) + '\n')
+    init_index(msg_data)
 
 
 _INDEX_SCHEMA = {
