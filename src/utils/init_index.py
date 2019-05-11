@@ -1,3 +1,4 @@
+import sys
 import json
 import requests
 
@@ -15,35 +16,25 @@ def init_index(data):
         props - elasticsearch type mapping properties
     """
     config = get_config()
-    # Fetch all index and alias names
-    aliases_resp = requests.get(config['elasticsearch_url'] + "/_aliases?format=json")
-    if not aliases_resp.ok:
-        raise RuntimeError(f"Error fetching aliases:\n{aliases_resp.text}")
-    # `indices` will be a dict where the keys are index names. Each value is a
-    # dict with a key for "aliases".
-    indices = aliases_resp.json()
     prefix = config['elasticsearch_index_prefix']
     index_name = f"{prefix}.{data['name']}"
     alias_name = f"{prefix}.{data['alias']}"
-    if index_name not in indices:
-        # Neither index nor alias has been created
-        print(f"Creating new index '{index_name}' with alias '{alias_name}'.")
-        _create_index(index_name, data['props'], config)
+    # Try to create index and alias, if not already present
+    try:
+        _create_index(index_name, config)
         _create_alias(alias_name, index_name, config)
-    elif alias_name not in indices[index_name].get('aliases', {}):
-        # Index is created, but let's check for aliases
-        print(f"Creating missing alias '{alias_name}'.")
-        _create_alias(alias_name, index_name, config)
+    except RuntimeError as err:
+        sys.stderr.write(str(err) + '\n')
+    # Update the type mapping
+    _put_mapping(index_name, data['props'], config)
     print("Finished loading index.")
 
 
-def _create_index(index_name, mapping, config):
+def _create_index(index_name, config):
     """
-    Create an index on Elasticsearch using a type mapping.
+    Create an index on Elasticsearch with a given name.
     """
-    es_type = config['elasticsearch_data_type']
     request_body = {
-        "mappings": {es_type: {"properties": mapping}},
         "settings": {
             "index": {
                 "number_of_shards": 10,
@@ -68,3 +59,15 @@ def _create_alias(alias_name, index_name, config):
     resp = requests.post(url, data=json.dumps(body), headers=_HEADERS)
     if not resp.ok:
         raise RuntimeError(f"Error creating alias '{alias_name}':\n{resp.text}")
+
+
+def _put_mapping(index_name, mapping, config):
+    """
+    Create or update the type mapping for a given index.
+    """
+    type_name = config['elasticsearch_data_type']
+    url = f"{config['elasticsearch_url']}/{index_name}/_mapping/{type_name}"
+    resp = requests.put(url, data=json.dumps({'properties': mapping}), headers=_HEADERS)
+    if not resp.ok:
+        raise RuntimeError(f"Error updating mapping for index {index_name}:\n{resp.text}")
+    print('Updated mapping', resp.text)

@@ -36,7 +36,6 @@ def kafka_consumer(topics, handlers):
             else:
                 sys.stderr.write("Kafka message error: {msg.error()}\n")
             continue
-        print(f'New message in {topics}: {msg.value()}')
         try:
             data = json.loads(msg.value().decode('utf-8'))
         except ValueError as err:

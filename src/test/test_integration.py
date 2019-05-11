@@ -26,6 +26,22 @@ class TestIntegration(unittest.TestCase):
         producer.poll(60)
         print("Done producing test message.")
 
+    def test_init_index(self):
+        producer = Producer({'bootstrap.servers': _CONFIG['kafka_server']})
+        print("Producing init_index message.")
+        producer.produce(
+            _CONFIG['elasticsearch_save_topic'],
+            json.dumps({
+                'props': {'timestamp': {'type': 'date'}},
+                'name': 'test_index:1',
+                'alias': 'test_index'
+            }),
+            'init_index',
+            callback=delivery_report
+        )
+        producer.poll(60)
+        print("Done producing test message.")
+
 
 # -- Utils
 
