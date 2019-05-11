@@ -28,7 +28,6 @@ def _handle_index(queue):
     Note that this function is curried to accept the thread queue.
     """
     def handler(msg_data):
-        print(f"Indexing document '{msg_data['id']}' in index '{msg_data['index']}'")
         # Save a document to an existing index
         jsonschema.validate(instance=msg_data, schema=_INDEX_SCHEMA)
         # Push the data to save into the thread queue.

@@ -32,6 +32,7 @@ def _save_to_elastic(data):
     prefix = config['elasticsearch_index_prefix']
     # Construct the post body for the bulk index
     json_body = ''
+    length = len(data)
     while data:
         datum = data.pop()
         index_name = f"{prefix}.{datum['index']}"
@@ -46,6 +47,7 @@ def _save_to_elastic(data):
         json_body += json.dumps(datum['doc'])
         json_body += '\n'
     es_url = "http://" + config['elasticsearch_host'] + ":" + str(config['elasticsearch_port'])
+    print(f"Bulk saving {length} documents..")
     # Save the document to the elasticsearch index
     resp = requests.post(
         f"{es_url}/_bulk",
@@ -55,4 +57,4 @@ def _save_to_elastic(data):
     if not resp.ok:
         # Unsuccesful save to elasticsearch.
         raise RuntimeError(f"Error saving to elasticsearch:\n{resp.text}")
-    print("Elasticsearch bulk save successful.")
+    print(f"Elasticsearch bulk save successful.")
