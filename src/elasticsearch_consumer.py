@@ -14,12 +14,31 @@ def main(queue):
     """
     config = get_config()
     topics = [config['elasticsearch_save_topic']]
+    # TODO: add in more types of handlers for different workspace/indexer kafka topics
+    #      - PUBLISH
+    #      - RENAME_ALL_VERSIONS
+    #      - REINDEX
+
     # Message handlers based on message key
     handlers = {
         b'index': _handle_index(queue),
-        b'init_index': _handle_init_index
+        b'init_index': _handle_init_index,
+        b'delete': _handle_delete(queue)
     }
     kafka_consumer(topics, handlers)
+
+
+def _handle_delete(queue):
+    """
+    Handle an event to delete an index document.
+    Note that this function is curried to accept the thread queue.
+    """
+    def handler(msg_data):
+        jsonschema.validate(instance=msg_data, schema=_DELETE_SCHEMA)
+        # add delete field to message
+        msg_data['delete'] = True
+        queue.put(msg_data)
+    return handler
 
 
 def _handle_index(queue):
@@ -52,6 +71,17 @@ _INDEX_SCHEMA = {
         'id': {'type': 'string'},
         'index': {'type': 'string'},
         'doc': {'type': 'object'}
+    }
+}
+
+
+_DELETE_SCHEMA = {
+    'type': 'object',
+    'required': ['id', 'index'],
+    'additionalProperties': False,
+    'properties': {
+        'id': {'type': 'string'},
+        'index': {'type': 'string'}
     }
 }
 
