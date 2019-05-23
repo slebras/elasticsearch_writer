@@ -7,22 +7,38 @@ import time
 import collections
 
 from .utils.config import get_config
+from .utils.elastic_utils import get_indexes_with_prefix
 
 
 def main(queue):
     batch_writes = []  # type: list
+    batch_writes_deletes = []  # type: list
     while True:
-        while queue.qsize() and len(batch_writes) < 1000:
-            batch_writes.append(queue.get())
+        # I don't really think this is the best way of doing this,
+        # but I can't come up with a better solution.
+        while queue.qsize() and len(batch_writes) < 1000 and len(batch_writes_deletes) < 1000:
+            msg_data = queue.get()
+            if msg_data.get('delete') or msg_data.get('delete_workspace'):
+                batch_writes_deletes.append(msg_data)
+            else:
+                batch_writes.append(msg_data)
+        if not batch_writes and not batch_writes_deletes:
+            time.sleep(3)
         if batch_writes:
             _save_to_elastic(_aggregate_batch(batch_writes))
             batch_writes = []
-        time.sleep(3)
+            time.sleep(3)
+        if batch_writes_deletes:
+            _delete_from_elastic(batch_writes_deletes)
+            batch_writes_deletes = []
+            time.sleep(3)
+
 
 def _get_id(data, _id):
     for msg_data in data:
         if _id == msg_data['id']:
             return msg_data
+
 
 def _aggregate_batch(data):
     """
@@ -75,6 +91,45 @@ def _aggregate_batch(data):
             pass
 
     return new_data
+
+
+def _delete_from_elastic(data):
+    """
+    """
+    config = get_config()
+    es_type = config['elasticsearch_data_type']
+    prefix = config['elasticsearch_index_prefix']
+    # Construct the post body for the bulk index
+    should_body = []
+    while data:
+        datum = data.pop()
+        prefix_body = {
+            'prefix': {'guid': datum['id']}
+        }
+        should_body.append(prefix_body)
+    json_body = json.dumps({
+        'query': {
+            'bool': {
+                'should': should_body
+            }
+        }
+    })
+
+    indexes = get_indexes_with_prefix(config, prefix)
+    # index_name = "_all"
+    index_name = ','.join(indexes)
+    es_url = "http://" + config['elasticsearch_host'] + ":" + str(config['elasticsearch_port'])
+    # Save the document to the elasticsearch index
+    resp = requests.post(
+        f"{es_url}/{index_name}/_delete_by_query",
+        data=json_body,
+        headers={"Content-Type": "application/json"}
+    )
+    if not resp.ok:
+        # Unsuccesful save to elasticsearch.
+        raise RuntimeError(f"Error saving to elasticsearch:\n{resp.text}")
+    print(f"Elasticsearch delete by query successful.")
+
 
 '''
 '''

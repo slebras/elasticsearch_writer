@@ -23,20 +23,18 @@ def main(queue):
     handlers = {
         b'index': _handle_index(queue),
         b'init_index': _handle_init_index,
-        b'delete': _handle_delete(queue)
+        b'delete': _handle_delete(queue, 'delete'),
+        b'delete_workspace': _handle_delete(queue, 'delete_workspace'),
     }
     kafka_consumer(topics, handlers)
 
 
-def _handle_delete(queue):
+def _handle_delete(queue, del_str):
     """
-    Handle an event to delete an index document.
-    Note that this function is curried to accept the thread queue.
     """
     def handler(msg_data):
         jsonschema.validate(instance=msg_data, schema=_DELETE_SCHEMA)
-        # add delete field to message
-        msg_data['delete'] = True
+        msg_data[del_str] = True
         queue.put(msg_data)
     return handler
 
