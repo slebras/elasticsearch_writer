@@ -143,13 +143,22 @@ def _save_to_elastic(data):
     while data:
         datum = data.pop()
         index_name = f"{prefix}.{datum['index']}"
-        json_body += json.dumps({
-            'index': {
-                '_index': index_name,
-                '_type': es_type,
-                '_id': datum['id']
-            }
-        })
+        if 'perm' in datum:
+            json_body += json.dumps({
+                'update': {
+                    '_index': index_name,
+                    '_type': es_type,
+                    '_id': datum['id']
+                }
+            })
+        else:
+            json_body += json.dumps({
+                'index': {
+                    '_index': index_name,
+                    '_type': es_type,
+                    '_id': datum['id']
+                }
+            })
         json_body += '\n'
         json_body += json.dumps(datum['doc'])
         json_body += '\n'

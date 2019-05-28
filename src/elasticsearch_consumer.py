@@ -21,13 +21,26 @@ def main(queue):
         b'init_index': _handle_init_index,
         b'delete': _handle_delete(queue, 'delete'),
         b'delete_workspace': _handle_delete(queue, 'delete_workspace'),
+        b'': _handle_permissions(queue)
     }
     kafka_consumer(topics, handlers)
 
 
+def _handle_permissions(queue):
+    """
+    This is the handler for permissions events
+    """
+    def handler(msg_data):
+        jsonschema.validate(instance=msg_data, schem=_PERMISSIONS_SCHEMA)
+        msg_data['perm'] = True
+        queue.put(msg_data)
+
+    return handler
+
+
 def _handle_delete(queue, del_str):
     """
-    This is  the hander for the 'delete' and 'delete_workspace' events
+    This is the handler for the 'delete' and 'delete_workspace' events
     """
     def handler(msg_data):
         jsonschema.validate(instance=msg_data, schema=_DELETE_SCHEMA)
