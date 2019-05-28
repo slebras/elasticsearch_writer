@@ -14,7 +14,6 @@ def main(queue):
     """
     config = get_config()
     topics = [config['elasticsearch_save_topic']]
-
     # Message handlers based on message key
     handlers = {
         b'index': _handle_index(queue),
@@ -27,7 +26,8 @@ def main(queue):
 
 def _handle_delete(queue, del_str):
     """
-    This is  the hander for the 'delete' and 'delete_workspace' events
+    This is  the hander for the 'delete' and 'delete_workspace' events.
+    Delete documents from elasticsearch based on id and index name.
     """
     def handler(msg_data):
         jsonschema.validate(instance=msg_data, schema=_DELETE_SCHEMA)
@@ -51,7 +51,9 @@ def _handle_index(queue):
 
 
 def _handle_init_index(msg_data):
-    """Handle an event to initialize a new index with a type mapping."""
+    """
+    Handle an event to initialize a new index with a type mapping.
+    """
     print(f"Initializing index '{msg_data['name']}'")
     # Initialize a new index with a type mapping
     jsonschema.validate(instance=msg_data, schema=_INIT_INDEX_SCHEMA)
