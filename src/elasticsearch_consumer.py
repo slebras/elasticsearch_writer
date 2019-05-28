@@ -14,10 +14,6 @@ def main(queue):
     """
     config = get_config()
     topics = [config['elasticsearch_save_topic']]
-    # TODO: add in more types of handlers for different workspace/indexer kafka topics
-    #      - PUBLISH
-    #      - RENAME_ALL_VERSIONS
-    #      - REINDEX
 
     # Message handlers based on message key
     handlers = {
@@ -31,6 +27,7 @@ def main(queue):
 
 def _handle_delete(queue, del_str):
     """
+    This is  the hander for the 'delete' and 'delete_workspace' events
     """
     def handler(msg_data):
         jsonschema.validate(instance=msg_data, schema=_DELETE_SCHEMA)
