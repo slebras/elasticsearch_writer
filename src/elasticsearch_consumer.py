@@ -14,12 +14,26 @@ def main(queue):
     """
     config = get_config()
     topics = [config['elasticsearch_save_topic']]
+
     # Message handlers based on message key
     handlers = {
         b'index': _handle_index(queue),
-        b'init_index': _handle_init_index
+        b'init_index': _handle_init_index,
+        b'delete': _handle_delete(queue, 'delete'),
+        b'delete_workspace': _handle_delete(queue, 'delete_workspace'),
     }
     kafka_consumer(topics, handlers)
+
+
+def _handle_delete(queue, del_str):
+    """
+    This is  the hander for the 'delete' and 'delete_workspace' events
+    """
+    def handler(msg_data):
+        jsonschema.validate(instance=msg_data, schema=_DELETE_SCHEMA)
+        msg_data[del_str] = True
+        queue.put(msg_data)
+    return handler
 
 
 def _handle_index(queue):
@@ -52,6 +66,17 @@ _INDEX_SCHEMA = {
         'id': {'type': 'string'},
         'index': {'type': 'string'},
         'doc': {'type': 'object'}
+    }
+}
+
+
+_DELETE_SCHEMA = {
+    'type': 'object',
+    'required': ['id', 'index'],
+    'additionalProperties': False,
+    'properties': {
+        'id': {'type': 'string'},
+        'index': {'type': 'string'}
     }
 }
 
